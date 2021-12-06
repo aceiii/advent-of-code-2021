@@ -16,8 +16,16 @@ def part1(lines):
 
 
 def part2(lines):
-    pass
-
+    depths = list(map(lambda x: int(x, 10), lines))
+    prev_window = tuple(depths[:3])
+    depths = depths[3:]
+    count = 0
+    while depths:
+        window = tuple([*prev_window[1:], depths.pop(0)])
+        if sum(window) > sum(prev_window):
+            count += 1
+        prev_window = window
+    return count
 
 def main():
     lines = sys.stdin.readlines()
