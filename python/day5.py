@@ -65,6 +65,17 @@ def part1(lines):
 
 
 def part2(lines):
+    segments = parse_line_segments(lines)
+    points = defaultdict(lambda: 0)
+    for segment in segments:
+        for point in segment.points():
+            points[point] += 1
+
+    answer = 0
+    for key, count in points.items():
+        if count >= 2:
+            answer += 1
+    return answer
     pass
 
 
