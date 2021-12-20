@@ -12,6 +12,15 @@ class BingoTile:
         if number == self.number:
             self.marked = True
 
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        num = str(self.number).rjust(2)
+        if not self.marked:
+            return num
+        return u"\u001b[31m" + num + u"\u001b[0m"
+
 
 class BingoBoard:
     def __init__(self, lines):
@@ -31,7 +40,7 @@ class BingoBoard:
         return str(self)
 
     def __str__(self):
-        return str(self._rows)
+        return "\n".join(" ".join(str(r) for r in row) for row in self._rows)
 
     def __iter__(self):
         return iter(self._rows)
@@ -81,13 +90,28 @@ def part1(lines):
 
 
 def part2(lines):
-    pass
+    numbers = parse_numbers(lines.pop(0))
+    boards = parse_boards(lines)
 
+    last = None
+    while boards and numbers:
+        num = numbers.pop(0)
+        to_remove = []
+        for board in boards:
+            board.mark(num)
+            if board.is_winner():
+                to_remove.append(board)
+        for board in to_remove:
+            boards.remove(board)
+            if not boards:
+                last = board
+
+    return last.score()
 
 def main():
     lines = sys.stdin.readlines()
-    print("Part1: {}".format(part1(lines)))
-    print("Part2: {}".format(part2(lines)))
+    print("Part1: {}".format(part1(lines[:])))
+    print("Part2: {}".format(part2(lines[:])))
 
 
 if __name__ == "__main__":
