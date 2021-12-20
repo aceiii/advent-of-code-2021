@@ -3,6 +3,10 @@
 import sys
 
 
+def calculate_cost2(positions, target):
+    return sum([sum(range(abs(n - target) + 1)) for n in positions])
+
+
 def part1(lines):
     positions = sorted([int(n, 10) for n in lines[0].strip().split(',')])
     med = positions[len(positions)//2]
@@ -11,7 +15,11 @@ def part1(lines):
 
 
 def part2(lines):
-    pass
+    positions = sorted([int(n, 10) for n in lines[0].strip().split(',')])
+    min_position, max_position = min(positions), max(positions)
+    target_range = range(min_position, max_position+1)
+    costs = [calculate_cost2(positions, n) for n in target_range]
+    return min(costs)
 
 
 def main():
