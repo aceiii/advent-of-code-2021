@@ -15,6 +15,9 @@ class OctopusSim:
                 pos = (x, y)
                 self._grid[pos] = energy
 
+    def size(self):
+        return (self._width, self._height)
+
     def step(self):
         flashed = set()
         flashing = set()
@@ -36,6 +39,9 @@ class OctopusSim:
         for pos in flashed:
             self._flashes += 1
             self._grid[pos] = 0
+
+    def reset_flashes(self):
+        self._flashes = 0
 
     def flashes(self):
         return self._flashes
@@ -84,7 +90,17 @@ def part1(lines):
 
 
 def part2(lines):
-    pass
+    sim = OctopusSim(lines)
+    steps = 0
+    width, height = sim.size()
+    target = width * height
+    while True:
+        steps += 1
+        sim.reset_flashes()
+        sim.step()
+        if sim.flashes() == target:
+            break
+    return steps
 
 
 def main():
