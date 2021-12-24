@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+from functools import reduce
 
 
 def validate_line(line):
@@ -18,8 +19,8 @@ def validate_line(line):
         elif expected_closing_tag and expected_closing_tag[-1] == char:
             expected_closing_tag.pop()
         else:
-            return char
-    return None
+            return (char, expected_closing_tag)
+    return (None, expected_closing_tag)
 
 
 def part1(lines):
@@ -30,11 +31,20 @@ def part1(lines):
         '>': 25137,
     }
     corrupted = [validate_line(line.strip()) for line in lines]
-    return sum(score_map[char] for char in corrupted if char is not None)
+    return sum(score_map[char] for char, _ in corrupted if char is not None)
 
 
 def part2(lines):
-    pass
+    score_map = {
+        ')': 1,
+        ']': 2,
+        '}': 3,
+        '>': 4,
+    }
+    lines = [(line.strip(), validate_line(line.strip())) for line in lines]
+    incomplete = [(line, reversed(tags)) for (line, (err, tags)) in lines if err is None]
+    scores = [reduce(lambda x, y: (x * 5) + score_map[y], tags, 0) for _, tags in incomplete]
+    return sorted(scores)[len(scores)//2]
 
 
 def main():
