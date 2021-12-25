@@ -65,12 +65,30 @@ class CaveMap:
         return self.pathfind(self.end(), self.start(), [])
 
 
+def pathfind2(start_cave, target_cave, current_cave, current_path):
+    new_path = current_path + [current_cave.name()]
+    if target_cave == current_cave:
+        return [new_path]
+    paths = []
+    visit_count = {c:new_path.count(c) for c in new_path if c.islower()}
+    duplicate_small_visit = any(visit_count[c] > 1 for c in visit_count)
+    for cave in current_cave.connected():
+        if cave == start_cave and cave.name() in current_path:
+            continue
+        elif not cave.is_big() and duplicate_small_visit and cave.name() in visit_count:
+            continue
+        paths.extend(pathfind2(start_cave, target_cave, cave, new_path))
+    return paths
+
+
 def part1(lines):
     caves = CaveMap(lines)
     return len(caves.paths())
 
 def part2(lines):
-    pass
+    caves = CaveMap(lines)
+    paths = pathfind2(caves.start(), caves.end(), caves.start(), [])
+    return len(paths)
 
 
 def main():
