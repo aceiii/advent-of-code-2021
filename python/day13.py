@@ -87,7 +87,10 @@ def part1(lines):
 
 
 def part2(lines):
-    pass
+    paper, folds = parse_paper(lines)
+    for fold in folds:
+        paper.fold(*fold)
+    return "\n" + str(paper)
 
 
 def main():
