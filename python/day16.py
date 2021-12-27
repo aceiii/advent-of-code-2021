@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+from functools import reduce
 
 
 class Packet:
@@ -19,8 +20,50 @@ class Packet:
     def is_literal(self):
         return self._type_id == 4
 
+    def is_sum(self):
+        return self._type_id == 0
+
+    def is_product(self):
+        return self._type_id == 1
+
+    def is_minimum(self):
+        return self._type_id == 2
+
+    def is_maximum(self):
+        return self._type_id == 3
+
+    def is_greater_than(self):
+        return self._type_id == 5
+
+    def is_less_than(self):
+        return self._type_id == 6
+
+    def is_equal_to(self):
+        return self._type_id == 7
+
     def value(self):
-        return self._value
+        if self.is_literal():
+            return self.get_literal_value()
+
+        values = (p.value() for p in self.sub_packets())
+
+        if self.is_sum():
+            return sum(values)
+        elif self.is_product():
+            return reduce(lambda x,y: x * y, values)
+        elif self.is_minimum():
+            return min(values)
+        elif self.is_maximum():
+            return max(values)
+        elif self.is_greater_than():
+            first, second = self.sub_packets()
+            return 1 if first.value() > second.value() else 0
+        elif self.is_less_than():
+            first, second = self.sub_packets()
+            return 1 if first.value() < second.value() else 0
+        elif self.is_equal_to():
+            first, second = self.sub_packets()
+            return 1 if first.value() == second.value() else 0
 
     def total_version(self):
         if self.is_literal():
@@ -28,7 +71,10 @@ class Packet:
         total = sum(p.total_version() for p in self.sub_packets())
         return self.version() + total
 
-    def set_value(self, value):
+    def get_literal_value(self):
+        return self._value
+
+    def set_literal_value(self, value):
         self._value = value
 
     def add_sub_packet(self, packet):
@@ -45,7 +91,7 @@ class Packet:
         spacer = " " * (level * spacing)
 
         if self.is_literal():
-            return spacer + head + str(self.value()) + tail
+            return spacer + head + str(self.get_literal_value()) + tail
 
         body = "\n".join(p.to_str(level+1) for p in self.sub_packets())
         if body.strip() == "":
@@ -94,7 +140,7 @@ def parse_packet_recursive(bits):
 
     if packet.is_literal():
         value, new_offset = parse_literal_value(bits)
-        packet.set_value(value)
+        packet.set_literal_value(value)
         offset += new_offset
         return packet, offset
 
@@ -138,7 +184,9 @@ def part1(lines):
 
 
 def part2(lines):
-    pass
+    bits = decode_bits(lines[0])
+    packet = parse_packet(bits)
+    return packet.value()
 
 
 def main():
