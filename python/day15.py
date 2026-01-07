@@ -3,38 +3,55 @@
 import sys
 from operator import itemgetter
 from collections import defaultdict
+from heapq import heapify, heappop, heappush
 
 
 class RiskMap:
-    def __init__(self, lines):
+    def __init__(self, lines, extends=1):
         self._height = len(lines)
         self._width = len(lines[0].strip())
-        self._map = {}
-        for y, line in enumerate(lines):
-            for x, char in enumerate(line.strip()):
+        self._grid = {}
+        risks = list(range(1,10))
+        for y in range(self._height * extends):
+            line = lines[y % self._width].strip()
+            extend_y = y // self._height
+            for x in range(self._width * extends):
                 pos = (x, y)
-                up = (x, y - 1)
-                left = (x - 1, y)
-                risk = int(char, 10)
-                up_risk, up_path = self._map[up][1:] if up in self._map else (None, [])
-                left_risk, left_path = self._map[left][1:] if left in self._map else (None, [])
-                if up_risk is not None and left_risk is not None:
-                    if up_risk <= left_risk:
-                        new_risk = risk + up_risk
-                        new_path = up_path + [pos]
-                    else:
-                        new_risk = risk + left_risk
-                        new_path = left_path + [pos]
-                elif up_risk is not None:
-                    new_risk = risk + up_risk
-                    new_path = up_path + [pos]
-                elif left_risk is not None:
-                        new_risk = risk + left_risk
-                        new_path = left_path + [pos]
-                else:
-                    new_risk = 0
-                    new_path = [pos]
-                self._map[pos] = (risk, new_risk, new_path)
+                extend_x = x // self._width
+                char = line[x % self._width]
+                risk_n = (int(char, 10) + extend_y + extend_x)
+                risk = risks[(risk_n - 1) % len(risks)]
+                self._grid[pos] = risk
+        self._width *= extends
+        self._height *= extends
+
+    def neighbours(self, pos):
+        x, y = pos
+        if y > 0:
+            yield (x, y-1)
+        if y < self._height-1:
+            yield (x, y+1)
+        if x > 0:
+            yield (x-1, y)
+        if x < self._width-1:
+            yield (x+1, y)
+
+    def path(self):
+        q = [(0, self.start())]
+        dist = {v:float('inf') for v in self._grid.keys()}
+        dist[self.start()] = 0
+        visited = set()
+        while q:
+            d, u = heappop(q)
+            if u in visited:
+                continue
+            visited.add(u)
+            for v in self.neighbours(u):
+                alt = d + self._grid[v]
+                if alt < dist[v]:
+                    dist[v] = alt
+                    heappush(q, (alt, v))
+        return dist[self.end()]
 
     def height(self):
         return self._height
@@ -42,22 +59,44 @@ class RiskMap:
     def width(self):
         return self._width
 
-    def path(self):
-        end = (self._width - 1, self._height - 1)
-        return self._map[end][2]
+    def start(self):
+        return (0, 0)
+
+    def end(self):
+        return (self._width - 1, self._height - 1)
 
     def risk_at(self, pos):
         return self._map[pos][0]
 
+    def total_risk_at(self, pos):
+        return self._map[pos][1]
+
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        path = set(pos for pos in self.path())
+        rows = []
+        for y in range(self._height):
+            row = []
+            for x in range(self._width):
+                pos = (x, y)
+                if pos in path:
+                    char = u"\u001b[31m" + str(self._map[pos][0]) + u"\u001b[0m"
+                else:
+                    char = str(self._map[pos][0])
+                row.append(char)
+            rows.append("".join(row))
+        return "\n".join(rows)
 
 def part1(lines):
     risk = RiskMap(lines)
-    path = risk.path()
-    return sum(risk.risk_at(pos) for pos in path[1:])
+    return risk.path()
 
 
 def part2(lines):
-    pass
+    risk = RiskMap(lines, 5)
+    return risk.path()
 
 
 def main():
